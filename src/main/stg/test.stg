@@ -1,0 +1,75 @@
+field(type, name) ::= <<
+private <type> <name>;<\n>
+>>
+
+normalSetter(class, currentBuilderClass, capitalizedField,valueType, valueName) ::= <<
+public <currentBuilderClass> <valueName>(<valueType> <valueName>) {
+	this.<valueName> = <valueName>;
+	return this;
+}
+<\n>
+>>
+
+builderSetter(class, currentBuilderClass, valueName, parentBuilder) ::= <<
+public <class>Builder\< <currentBuilderClass> > <valueName>() {
+	this.<valueName>Builder = new <class>Builder\< <currentBuilderClass> >(this);
+	return this.<valueName>Builder;
+}
+<\n>
+>>
+
+
+topLevelBuilderClass(package, qualifiedClass, class, subBuildersFields, fields, subBuildersInit, setterMethods, instanceInit) ::= <<
+package <package>;
+
+import <qualifiedClass>;
+
+public class <class>Builder {
+	 
+	<subBuildersFields>
+	<fields>
+	
+	public <class>Builder() {
+		<subBuildersInit>
+	}
+	
+	<setterMethods>
+			
+	public <class> build() {
+		<class> instance = new <class>();
+		<instanceInit>		
+		return instance;
+	}	
+}
+>>
+
+
+builderClass(package, qualifiedClass, class, subBuildersFields, fields, subBuildersInit, setterMethods, instanceInit, parentBuilder) ::= <<
+package <package>;
+
+import <qualifiedClass>;
+
+public class <class>Builder\<P> {
+	 
+	<subBuildersFields>
+	<fields>
+	P _parent;
+	
+	public <class>Builder(P _parent) {
+		<subBuildersInit>
+		this._parent = _parent;
+	}
+	
+	<setterMethods>
+	
+	public P end() {
+		return _parent;
+	}
+			
+	public <class> build() {
+		<class> instance = new <class>();
+		<instanceInit>		
+		return instance;
+	}	
+}
+>>

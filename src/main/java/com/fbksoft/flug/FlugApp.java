@@ -14,6 +14,8 @@ import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
+import com.de.helios.data.x12x13.AffaireType;
+
 public class FlugApp {
 
 	public Stack<BuilderEntity> workList = new Stack<>();
@@ -23,7 +25,7 @@ public class FlugApp {
 	private String outputPackageName = "com.fbksoft.flug.gen";
 
 	public void run() throws Exception {
-		workList.push(new BuilderEntity(Object.class, null));
+		workList.push(new BuilderEntity(AffaireType.class, null));
 		includeSet.add("com.de");
 
 		while (!workList.isEmpty()) {
@@ -62,6 +64,8 @@ public class FlugApp {
 
 			Package propertyPackage = propertyType.getPackage();
 
+			String currentBuilderClass = topLevel ? domainClass.getSimpleName() + "Builder" : domainClass.getSimpleName() + "Builder<P>";
+
 			if (propertyPackage != null && propertyPackage.getName().startsWith(domainClass.getPackage().getName())) {
 
 				if (!visitedClasses.contains(propertyType.getName())) {
@@ -69,12 +73,17 @@ public class FlugApp {
 				}
 
 				ST fieldTemplate = groupFile.getInstanceOf("field");
-				fieldTemplate.add("type", propertyType.getSimpleName() + "Builder<" + domainClass.getSimpleName() + "Builder<P>>");
+
+				String fieldType = propertyType.getSimpleName() + "Builder<" + domainClass.getSimpleName() + "Builder" + (topLevel ? "" : "<P>") + ">";
+
+				fieldTemplate.add("type", fieldType);
 				fieldTemplate.add("name", propertyDescriptor.getName() + "Builder");
 				entityTemplate.add("fields", fieldTemplate.render());
 
 				// Builder setter
+
 				ST setterTemplate = groupFile.getInstanceOf("builderSetter");
+				setterTemplate.add("currentBuilderClass", currentBuilderClass);
 				setterTemplate.add("class", propertyType.getSimpleName());
 				setterTemplate.add("valueName", propertyDescriptor.getName());
 				setterTemplate.add("parentBuilder", domainClass.getSimpleName());
@@ -91,6 +100,7 @@ public class FlugApp {
 
 				// Normal setter
 				ST setterTemplate = groupFile.getInstanceOf("normalSetter");
+				setterTemplate.add("currentBuilderClass", currentBuilderClass);
 				setterTemplate.add("class", domainClass.getSimpleName());
 				setterTemplate.add("valueName", propertyDescriptor.getName());
 				setterTemplate.add("valueType", propertyDescriptor.getPropertyType().getName());
