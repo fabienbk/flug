@@ -8,14 +8,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
-
-import javax.swing.JFrame;
 
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
+
+import com.thoughtworks.qdox.JavaDocBuilder;
 
 public class FlugApp {
 
@@ -24,11 +25,25 @@ public class FlugApp {
 	public Set<String> includeSet = new HashSet<>();
 
 	private String outputPackageName = "com.fbksoft.flug.gen";
+	private JavaDocBuilder docBuilder;
+
+	public FlugApp(List<String> topLevelClassList, String rootPackage) {
+
+		this.docBuilder = new JavaDocBuilder();
+
+		includeSet.add(rootPackage);
+		for (String string : topLevelClassList) {
+			Class<?> forName;
+			try {
+				forName = Class.forName(string);
+				workList.push(new BuilderEntity(forName, null));
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public void run() throws Exception {
-		workList.push(new BuilderEntity(JFrame.class, null));
-		includeSet.add("javax.swing");
-
 		while (!workList.isEmpty()) {
 			writeNewBuilder(workList.pop());
 		}
@@ -147,10 +162,6 @@ public class FlugApp {
 		FileWriter fileWriter = new FileWriter(new File(dir, fileName));
 		fileWriter.write(entityTemplate.render());
 		fileWriter.close();
-	}
-
-	public static void main(String[] args) throws Exception {
-		new FlugApp().run();
 	}
 
 }
