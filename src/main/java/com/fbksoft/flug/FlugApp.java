@@ -102,7 +102,7 @@ public class FlugApp {
 				// instance init
 				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInit");
 				instanceInitTemplate.add("setter", propertyDescriptor.getWriteMethod().getName());
-				instanceInitTemplate.add("value", propertyBuilderName + ".build()");
+				instanceInitTemplate.add("value", propertyBuilderName + " == null ? null : " + propertyBuilderName + ".build()");
 				entityTemplate.add("instanceInit", instanceInitTemplate.render());
 
 				entityTemplate.add("setterMethods", setterTemplate.render());
