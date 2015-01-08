@@ -11,11 +11,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
+import javax.swing.JFrame;
+
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
-
-import com.de.helios.data.x12x13.AffaireType;
 
 public class FlugApp {
 
@@ -26,7 +26,7 @@ public class FlugApp {
 	private String outputPackageName = "com.fbksoft.flug.gen";
 
 	public void run() throws Exception {
-		workList.push(new BuilderEntity(AffaireType.class, null));
+		workList.push(new BuilderEntity(JFrame.class, null));
 		includeSet.add("javax.swing");
 
 		while (!workList.isEmpty()) {
