@@ -11,11 +11,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import javax.swing.JButton;
-
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
+
+import com.de.helios.data.x12x13.AffaireType;
 
 public class FlugApp {
 
@@ -26,7 +26,7 @@ public class FlugApp {
 	private String outputPackageName = "com.fbksoft.flug.gen";
 
 	public void run() throws Exception {
-		workList.push(new BuilderEntity(JButton.class, null));
+		workList.push(new BuilderEntity(AffaireType.class, null));
 		includeSet.add("javax.swing");
 
 		while (!workList.isEmpty()) {
@@ -50,9 +50,7 @@ public class FlugApp {
 		boolean topLevel = classItem.parentBuilder == null;
 
 		ST entityTemplate = topLevel ? groupFile.getInstanceOf("topLevelBuilderClass") : groupFile.getInstanceOf("builderClass");
-
 		BeanInfo beanInfo = Introspector.getBeanInfo(domainClass);
-
 		PropertyDescriptor[] propertyDescriptors = beanInfo.getPropertyDescriptors();
 
 		for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
@@ -78,7 +76,9 @@ public class FlugApp {
 
 			String propertyBuilderName = propertyClassSimpleName + "Builder";
 
-			if (propertyPackage != null && propertyPackage.getName().startsWith(domainClass.getPackage().getName())) {
+			boolean isBuildableProperty = propertyPackage != null && propertyPackage.getName().startsWith(domainClass.getPackage().getName());
+
+			if (isBuildableProperty) {
 
 				if (!visitedClasses.contains(propertyType.getName())) {
 					workList.push(new BuilderEntity(Class.forName(propertyType.getName()), domainClass.getSimpleName() + "Builder"));
@@ -99,6 +99,12 @@ public class FlugApp {
 				setterTemplate.add("valueName", propertyClassSimpleName);
 				setterTemplate.add("parentBuilder", domainClass.getSimpleName());
 
+				// instance init
+				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInit");
+				instanceInitTemplate.add("setter", propertyDescriptor.getWriteMethod().getName());
+				instanceInitTemplate.add("value", propertyBuilderName + ".build()");
+				entityTemplate.add("instanceInit", instanceInitTemplate.render());
+
 				entityTemplate.add("setterMethods", setterTemplate.render());
 
 			} else {
@@ -116,6 +122,13 @@ public class FlugApp {
 				setterTemplate.add("valueName", propertyClassSimpleName);
 				setterTemplate.add("valueType", propertyDescriptor.getPropertyType().getName());
 				entityTemplate.add("setterMethods", setterTemplate.render());
+
+				// instance init
+				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInit");
+				instanceInitTemplate.add("setter", propertyDescriptor.getWriteMethod().getName());
+				instanceInitTemplate.add("value", propertyClassSimpleName);
+				entityTemplate.add("instanceInit", instanceInitTemplate.render());
+
 			}
 
 		}
@@ -124,11 +137,8 @@ public class FlugApp {
 		entityTemplate.add("qualifiedClass", domainClass.getName());
 
 		entityTemplate.add("package", outputPackageName);
-		entityTemplate.add("subBuildersFields", "");
 
-		entityTemplate.add("subBuildersInit", "");
-		entityTemplate.add("setterMethods", "");
-		entityTemplate.add("instanceInit", "");
+		// entityTemplate.add("setterMethods", "");
 
 		writeTemplate(new File("src/main/java/com/fbksoft/flug/gen"), domainClass.getSimpleName() + "Builder.java", entityTemplate);
 	}

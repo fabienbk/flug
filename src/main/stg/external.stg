@@ -19,18 +19,16 @@ public <class>Builder\< <currentBuilderClass> > <valueName>() {
 >>
 
 
-topLevelBuilderClass(package, qualifiedClass, class, subBuildersFields, fields, subBuildersInit, setterMethods, instanceInit) ::= <<
+topLevelBuilderClass(package, qualifiedClass, class, fields, setterMethods, instanceInit) ::= <<
 package <package>;
 
 import <qualifiedClass>;
 
 public class <class>Builder {
 	 
-	<subBuildersFields>
 	<fields>
 	
 	public <class>Builder() {
-		<subBuildersInit>
 	}
 	
 	<setterMethods>
@@ -44,7 +42,7 @@ public class <class>Builder {
 >>
 
 
-builderClass(package, qualifiedClass, class, subBuildersFields, fields, subBuildersInit, setterMethods, instanceInit, parentBuilder) ::= <<
+builderClass(package, qualifiedClass, class, subBuildersFields, fields, setterMethods, instanceInit, parentBuilder) ::= <<
 package <package>;
 
 import <qualifiedClass>;
@@ -56,7 +54,6 @@ public class <class>Builder\<P> {
 	P _parent;
 	
 	public <class>Builder(P _parent) {
-		<subBuildersInit>
 		this._parent = _parent;
 	}
 	
@@ -72,4 +69,9 @@ public class <class>Builder\<P> {
 		return instance;
 	}	
 }
+>>
+
+instanceInit(setter, value) ::= <<
+instance.<setter>(<value>);
+	
 >>
