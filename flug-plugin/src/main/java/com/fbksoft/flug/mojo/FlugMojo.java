@@ -9,6 +9,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
+import com.fbksoft.flug.FlugApp;
 import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 
@@ -35,15 +36,15 @@ public class FlugMojo extends AbstractMojo {
 	List<String> sources;
 
 	/**
-	 * @parameter default-value="target/generated-sources/flug"
+	 * packageName
+	 *
+	 * @parameter
 	 * @required
 	 */
-	// File outputDirectory;
+	String packageName;
 
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
-
-		// project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
 
 		JavaDocBuilder builder = new JavaDocBuilder();
 
@@ -63,9 +64,7 @@ public class FlugMojo extends AbstractMojo {
 			}
 
 			JavaClass[] classes = builder.getClasses();
-			for (JavaClass javaClass : classes) {
-				System.out.println("class name  " + javaClass.getName());
-			}
+			new FlugApp(classes, packageName);
 		}
 
 	}
