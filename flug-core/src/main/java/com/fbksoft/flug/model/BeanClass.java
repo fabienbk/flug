@@ -12,29 +12,12 @@ public class BeanClass {
 
 	private String simpleName;
 	private BeanProperty[] beanProperties;
-
-	private BeanClass() {
-	}
-
-	public BeanProperty[] getBeanProperties() {
-		return beanProperties;
-	}
-
-	public void setBeanProperties(BeanProperty[] beanProperties) {
-		this.beanProperties = beanProperties;
-	}
-
-	public String getSimpleName() {
-		return simpleName;
-	}
-
-	public void setSimpleName(String simpleName) {
-		this.simpleName = simpleName;
-	}
+	private String qualifiedName;
 
 	public static BeanClass from(Class<?> clazz) {
 		BeanClass beanClass = new BeanClass();
 		beanClass.setSimpleName(clazz.getSimpleName());
+		beanClass.setQualifiedName(clazz.getName());
 
 		BeanInfo beanInfo = null;
 		try {
@@ -69,6 +52,7 @@ public class BeanClass {
 	public static BeanClass from(JavaClass clazz) {
 		BeanClass beanClass = new BeanClass();
 		beanClass.setSimpleName(clazz.getName());
+		beanClass.setQualifiedName(clazz.getFullyQualifiedName());
 
 		com.thoughtworks.qdox.model.BeanProperty[] originalBeanProperties = clazz.getBeanProperties();
 		BeanProperty[] beanProperties = new BeanProperty[originalBeanProperties.length];
@@ -87,4 +71,27 @@ public class BeanClass {
 		return beanClass;
 	}
 
+	public String getQualifiedName() {
+		return qualifiedName;
+	}
+
+	public BeanProperty[] getBeanProperties() {
+		return beanProperties;
+	}
+
+	public void setBeanProperties(BeanProperty[] beanProperties) {
+		this.beanProperties = beanProperties;
+	}
+
+	public String getSimpleName() {
+		return simpleName;
+	}
+
+	public void setSimpleName(String simpleName) {
+		this.simpleName = simpleName;
+	}
+
+	public void setQualifiedName(String qualifiedName) {
+		this.qualifiedName = qualifiedName;
+	}
 }

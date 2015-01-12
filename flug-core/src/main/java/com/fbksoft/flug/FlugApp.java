@@ -18,24 +18,35 @@ import com.thoughtworks.qdox.model.JavaClass;
 
 public class FlugApp {
 
+	private File outputDirectory = new File(".");
 	public Stack<BuilderEntity> workList = new Stack<>();
 	public Set<String> visitedClasses = new HashSet<>();
 	public Set<String> includeSet = new HashSet<>();
 
-	private String outputPackageName = "com.fbksoft.flug.gen";
+	private String outputPackageName;
 
-	public FlugApp(JavaClass[] classes, String rootPackage) {
-		includeSet.add(rootPackage);
+	public FlugApp(JavaClass[] classes, String rootPackage, String outputPackageName, File outputDirectory) {
+		init(rootPackage, outputPackageName, outputDirectory);
+
 		for (JavaClass javaClass : classes) {
 			workList.push(new BuilderEntity(javaClass, null));
 		}
 	}
 
-	public FlugApp(Class<?>[] classes, String rootPackage) {
-		includeSet.add(rootPackage);
+	public FlugApp(Class<?>[] classes, String rootPackage, String outputPackageName, File outputDirectory) {
+		init(rootPackage, outputPackageName, outputDirectory);
+
 		for (Class<?> clazz : classes) {
 			workList.push(new BuilderEntity(clazz, null));
 		}
+	}
+
+	private void init(String rootPackage, String outputPackageName, File outputDirectory) {
+		this.outputPackageName = outputPackageName;
+		this.outputDirectory = outputDirectory;
+		this.includeSet.add(rootPackage);
+
+		System.out.println("output directory = " + outputDirectory);
 	}
 
 	public void run() throws Exception {
@@ -59,6 +70,8 @@ public class FlugApp {
 
 		ST entityTemplate = topLevel ? groupFile.getInstanceOf("topLevelBuilderClass") : groupFile.getInstanceOf("builderClass");
 		String javaClassName = beanClass.getSimpleName();
+		String javaClassQName = beanClass.getQualifiedName();
+
 		BeanProperty[] beanProperties = beanClass.getBeanProperties();
 
 		for (BeanProperty beanProperty : beanProperties) {
@@ -137,13 +150,13 @@ public class FlugApp {
 		}
 
 		entityTemplate.add("class", javaClassName);
-		entityTemplate.add("qualifiedClass", javaClassName);
+		entityTemplate.add("qualifiedClass", javaClassQName);
 
 		entityTemplate.add("package", outputPackageName);
 
 		// entityTemplate.add("setterMethods", "");
 
-		writeTemplate(new File("src/main/java/com/fbksoft/flug/gen"), javaClassName + "Builder.java", entityTemplate);
+		writeTemplate(outputDirectory, javaClassName + "Builder.java", entityTemplate);
 	}
 
 	private boolean isBuildable(String propertyPackageName) {

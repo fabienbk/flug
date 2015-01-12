@@ -19,7 +19,6 @@ public class BuilderEntity {
 
 	private JavaClass javaClass;
 
-	private Class<?> clazz;
 	private Map<String, List<PropertyDescriptor>> propertiesByName;
 
 	public BuilderEntity(JavaClass javaClass, String parentBuilder) {
@@ -29,7 +28,6 @@ public class BuilderEntity {
 	}
 
 	public BuilderEntity(Class<?> clazz, String parentBuilder) {
-		this.clazz = clazz;
 		try {
 			PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
 			propertiesByName = Arrays.asList(propertyDescriptors).stream().collect(Collectors.groupingBy(PropertyDescriptor::getName));
@@ -42,18 +40,6 @@ public class BuilderEntity {
 
 	public BeanClass getBeanClass() {
 		return beanClass;
-	}
-
-	public void setBeanClass(BeanClass beanClass) {
-		this.beanClass = beanClass;
-	}
-
-	public String getParentBuilder() {
-		return parentBuilder;
-	}
-
-	public void setParentBuilder(String parentBuilder) {
-		this.parentBuilder = parentBuilder;
 	}
 
 	public String getBuilderClassSimpleName() {
