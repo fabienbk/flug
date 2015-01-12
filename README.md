@@ -17,6 +17,16 @@ Instead of :
 	contributor.setAge(31);
 	project.setContributor(contributor);
 
-Flug generate pure java code that has no compilation dependencies. Flug also does not require that you put annotation on your beans, making it extremely suitable
-for generated classes (via JAXB for instance).
+Some features:
+
+* Generated code has no compilation dependencies;
+* You can input source code (.java) or compiled classes (.class);
+* Doesn't need any annotations, which makes flug extremely suitable for generated classes (such as JAXB);
+* Generate clever collections setters (Map, List, and Set)
+
+## How do I use it?
+
+Flugs comes as a maven plugin, a runnable class, or a standalone command-line tool. More on that later.
+
+
 
