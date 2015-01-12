@@ -2,18 +2,18 @@ field(type, name) ::= <<
 private <type> <name>;<\n>
 >>
 
-normalSetter(class, currentBuilderClass, capitalizedField,valueType, valueName) ::= <<
-public <currentBuilderClass> <valueName>(<valueType> <valueName>) {
-	this.<valueName> = <valueName>;
+normalSetter(class, currentBuilderClass, capitalizedField,valueType, propertyName) ::= <<
+public <currentBuilderClass> <propertyName>(<valueType> <propertyName>) {
+	this.<propertyName> = <propertyName>;
 	return this;
 }
 <\n>
 >>
 
-builderSetter(class, currentBuilderClass, valueName, parentBuilder) ::= <<
-public <class>Builder\< <currentBuilderClass> > <valueName>() {
-	this.<valueName>Builder = new <class>Builder\< <currentBuilderClass> >(this);
-	return this.<valueName>Builder;
+builderSetter(class, currentBuilderClass, propertyName, parentBuilder) ::= <<
+public <class>Builder\< <currentBuilderClass> > <propertyName>() {
+	this.<propertyName> = new <class>Builder\< <currentBuilderClass> >(this);
+	return this.<propertyName>;
 }
 <\n>
 >>

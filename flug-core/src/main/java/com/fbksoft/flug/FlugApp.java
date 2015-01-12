@@ -78,6 +78,7 @@ public class FlugApp {
 
 			String propertyClassSimpleName = beanProperty.getClassSimpleName();
 			String writeMethodName = beanProperty.getSetterName();
+			String propertyName = beanProperty.getName();
 
 			if (propertyClassSimpleName.equals("class")) {
 				continue;
@@ -91,7 +92,7 @@ public class FlugApp {
 
 			String currentBuilderClass = topLevel ? javaClassName + "Builder" : javaClassName + "Builder<P>";
 
-			String propertyBuilderName = propertyClassSimpleName + "Builder";
+			String propertyBuilderName = propertyName + "Builder";
 
 			if (isBuildable(propertyPackageName)) {
 
@@ -111,7 +112,7 @@ public class FlugApp {
 				ST setterTemplate = groupFile.getInstanceOf("builderSetter");
 				setterTemplate.add("currentBuilderClass", currentBuilderClass);
 				setterTemplate.add("class", beanProperty.getClassSimpleName());
-				setterTemplate.add("valueName", propertyClassSimpleName);
+				setterTemplate.add("propertyName", propertyBuilderName);
 				setterTemplate.add("parentBuilder", javaClassName);
 
 				// instance init
@@ -128,21 +129,21 @@ public class FlugApp {
 				// Normal Field
 				ST fieldTemplate = groupFile.getInstanceOf("field");
 				fieldTemplate.add("type", beanProperty.getClassSimpleName());
-				fieldTemplate.add("name", propertyClassSimpleName);
+				fieldTemplate.add("name", propertyName);
 				entityTemplate.add("fields", fieldTemplate.render());
 
 				// Normal setter
 				ST setterTemplate = groupFile.getInstanceOf("normalSetter");
 				setterTemplate.add("currentBuilderClass", currentBuilderClass);
 				setterTemplate.add("class", javaClassName);
-				setterTemplate.add("valueName", propertyClassSimpleName);
+				setterTemplate.add("propertyName", propertyName);
 				setterTemplate.add("valueType", beanProperty.getQualifiedName());
 				entityTemplate.add("setterMethods", setterTemplate.render());
 
 				// instance init
 				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInit");
 				instanceInitTemplate.add("setter", writeMethodName);
-				instanceInitTemplate.add("value", propertyClassSimpleName);
+				instanceInitTemplate.add("value", propertyName);
 				entityTemplate.add("instanceInit", instanceInitTemplate.render());
 
 			}

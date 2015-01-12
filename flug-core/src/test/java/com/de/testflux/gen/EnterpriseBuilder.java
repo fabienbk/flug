@@ -4,20 +4,20 @@ import com.de.testflux.Enterprise;
 
 public class EnterpriseBuilder {
 
-	private AddressBuilder<EnterpriseBuilder> AddressBuilder;
-	private String String;
+	private AddressBuilder<EnterpriseBuilder> addressBuilder;
+	private String name;
 
 
 	public EnterpriseBuilder() {
 	}
 
-	public AddressBuilder< EnterpriseBuilder > Address() {
-		this.AddressBuilder = new AddressBuilder< EnterpriseBuilder >(this);
-		return this.AddressBuilder;
+	public AddressBuilder< EnterpriseBuilder > addressBuilder() {
+		this.addressBuilder = new AddressBuilder< EnterpriseBuilder >(this);
+		return this.addressBuilder;
 	}
 
-	public EnterpriseBuilder String(java.lang.String String) {
-		this.String = String;
+	public EnterpriseBuilder name(java.lang.String name) {
+		this.name = name;
 		return this;
 	}
 
@@ -25,8 +25,8 @@ public class EnterpriseBuilder {
 
 	public Enterprise build() {
 		Enterprise instance = new Enterprise();
-		instance.setAddress(AddressBuilder == null ? null : AddressBuilder.build());
-			instance.setName(String);
+		instance.setAddress(addressBuilder == null ? null : addressBuilder.build());
+			instance.setName(name);
 					
 		return instance;
 	}	

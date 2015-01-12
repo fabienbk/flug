@@ -4,7 +4,7 @@ import com.de.testflux.City;
 
 public class CityBuilder<P> {
 
-	private String String;
+	private String name;
 
 	P _parent;
 
@@ -12,8 +12,8 @@ public class CityBuilder<P> {
 		this._parent = _parent;
 	}
 
-	public CityBuilder<P> String(java.lang.String String) {
-		this.String = String;
+	public CityBuilder<P> name(java.lang.String name) {
+		this.name = name;
 		return this;
 	}
 
@@ -25,7 +25,7 @@ public class CityBuilder<P> {
 
 	public City build() {
 		City instance = new City();
-		instance.setName(String);
+		instance.setName(name);
 					
 		return instance;
 	}	

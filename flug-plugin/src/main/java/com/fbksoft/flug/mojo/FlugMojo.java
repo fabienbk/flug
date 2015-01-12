@@ -9,7 +9,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
-import com.fbksoft.flug.FlugApp;
 import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 
@@ -64,7 +63,7 @@ public class FlugMojo extends AbstractMojo {
 			}
 
 			JavaClass[] classes = builder.getClasses();
-			new FlugApp(classes, packageName);
+			// new FlugApp(classes, packageName);
 		}
 
 	}
