@@ -28,7 +28,12 @@
 		<dependency>
 			<groupId>com.thoughtworks.qdox</groupId>
 			<artifactId>qdox</artifactId>
-			<version>1.10.1</version>
+			<version>1.12.1</version>
+		</dependency>
+		<dependency>
+  			<groupId>net.jodah</groupId>
+  			<artifactId>typetools</artifactId>
+  			<version>0.4.0</version>
 		</dependency>
 	</dependencies>
 </project>

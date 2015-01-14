@@ -4,7 +4,11 @@ import java.beans.IntrospectionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
@@ -13,7 +17,8 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 import com.fbksoft.flug.model.BeanClass;
-import com.fbksoft.flug.model.BeanProperty;
+import com.fbksoft.flug.model.BeanPropertyDescriptor;
+import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
 
 public class FlugApp {
@@ -25,19 +30,11 @@ public class FlugApp {
 
 	private String outputPackageName;
 
-	public FlugApp(JavaClass[] classes, String rootPackage, String outputPackageName, File outputDirectory) {
+	public FlugApp(JavaDocBuilder builder, String rootPackage, String outputPackageName, File outputDirectory) {
 		init(rootPackage, outputPackageName, outputDirectory);
 
-		for (JavaClass javaClass : classes) {
-			workList.push(new BuilderEntity(javaClass, null));
-		}
-	}
-
-	public FlugApp(Class<?>[] classes, String rootPackage, String outputPackageName, File outputDirectory) {
-		init(rootPackage, outputPackageName, outputDirectory);
-
-		for (Class<?> clazz : classes) {
-			workList.push(new BuilderEntity(clazz, null));
+		for (JavaClass javaClass : builder.getClasses()) {
+			workList.push(new BuilderEntity(javaClass, true));
 		}
 	}
 
@@ -64,17 +61,15 @@ public class FlugApp {
 	}
 
 	private void writeNewBuilder(BuilderEntity builder, BeanClass beanClass) throws IntrospectionException, ClassNotFoundException, IOException {
+
+		System.out.println("*** Writer builder for " + beanClass.getQualifiedName());
 		STGroup groupFile = new STGroupFile("src/main/stg/external.stg");
 
-		boolean topLevel = builder.parentBuilder == null;
-
-		ST entityTemplate = topLevel ? groupFile.getInstanceOf("topLevelBuilderClass") : groupFile.getInstanceOf("builderClass");
+		ST entityTemplate = builder.isTopLevel() ? groupFile.getInstanceOf("topLevelBuilderClass") : groupFile.getInstanceOf("builderClass");
 		String javaClassName = beanClass.getSimpleName();
 		String javaClassQName = beanClass.getQualifiedName();
 
-		BeanProperty[] beanProperties = beanClass.getBeanProperties();
-
-		for (BeanProperty beanProperty : beanProperties) {
+		for (BeanPropertyDescriptor beanProperty : beanClass.getBeanProperties()) {
 
 			String propertyClassSimpleName = beanProperty.getClassSimpleName();
 			String writeMethodName = beanProperty.getSetterName();
@@ -88,21 +83,19 @@ public class FlugApp {
 				continue;
 			}
 
-			String propertyPackageName = beanProperty.getPackageName();
-
-			String currentBuilderClass = topLevel ? javaClassName + "Builder" : javaClassName + "Builder<P>";
+			String currentBuilderClass = builder.isTopLevel() ? javaClassName + "Builder" : javaClassName + "Builder<P>";
 
 			String propertyBuilderName = propertyName + "Builder";
 
-			if (isBuildable(propertyPackageName)) {
+			if (beanProperty.isBuildable(includeSet)) {
 
 				if (!visitedClasses.contains(beanProperty.getQualifiedName())) {
-					workList.push(builder.getSubBuilder(beanProperty.getName()));
+					workList.push(builder.getSubBuilder(beanProperty.getName(), includeSet));
 				}
 
 				ST fieldTemplate = groupFile.getInstanceOf("field");
 
-				String fieldType = beanProperty.getClassSimpleName() + "Builder<" + javaClassName + "Builder" + (topLevel ? "" : "<P>") + ">";
+				String fieldType = beanProperty.getClassSimpleName() + "Builder<" + javaClassName + "Builder" + (builder.isTopLevel() ? "" : "<P>") + ">";
 
 				fieldTemplate.add("type", fieldType);
 				fieldTemplate.add("name", propertyBuilderName);
@@ -112,13 +105,49 @@ public class FlugApp {
 				ST setterTemplate = groupFile.getInstanceOf("builderSetter");
 				setterTemplate.add("currentBuilderClass", currentBuilderClass);
 				setterTemplate.add("class", beanProperty.getClassSimpleName());
-				setterTemplate.add("propertyName", propertyBuilderName);
+				setterTemplate.add("propertyName", propertyName);
 				setterTemplate.add("parentBuilder", javaClassName);
 
 				// instance init
 				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInit");
 				instanceInitTemplate.add("setter", beanProperty.getSetterName());
 				instanceInitTemplate.add("value", propertyBuilderName + " == null ? null : " + propertyBuilderName + ".build()");
+				entityTemplate.add("instanceInit", instanceInitTemplate.render());
+
+				entityTemplate.add("setterMethods", setterTemplate.render());
+
+			} else if (beanProperty.isBuildableCollection(includeSet)) {
+
+				if (!visitedClasses.contains(beanProperty.getQualifiedName())) {
+					workList.push(builder.getSubBuilder(beanProperty.getName(), includeSet));
+				}
+
+				ST fieldTemplate = groupFile.getInstanceOf("field");
+
+				String fieldType = beanProperty.getQualifiedName();
+				String fieldTypeGenericArgument = beanProperty.getGenericType()[0].getJavaClass().getName() + "Builder<" + javaClassName + "Builder"
+								+ (builder.isTopLevel() ? "" : "<P>") + ">";
+
+				fieldTemplate.add("type", fieldType + "<" + fieldTypeGenericArgument + ">");
+				fieldTemplate.add("name", propertyBuilderName);
+				entityTemplate.add("fields", fieldTemplate.render());
+
+				String concreteCollectionClass = getConcreteCollectionClassName(beanProperty.getJavaClass(), fieldTypeGenericArgument);
+
+				// Builder setter
+				ST setterTemplate = groupFile.getInstanceOf("collectionSetter");
+				setterTemplate.add("currentBuilderClass", fieldTypeGenericArgument);
+				setterTemplate.add("class", beanProperty.getClassSimpleName());
+				setterTemplate.add("propertyName", propertyName);
+				setterTemplate.add("parentBuilder", javaClassName);
+				setterTemplate.add("collectionClass", fieldType + "<" + fieldTypeGenericArgument + ">");
+
+				setterTemplate.add("concreteCollectionClass", concreteCollectionClass);
+
+				// instance init
+				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInitList");
+				instanceInitTemplate.add("setter", beanProperty.getSetterName());
+				instanceInitTemplate.add("propName", propertyBuilderName);
 				entityTemplate.add("instanceInit", instanceInitTemplate.render());
 
 				entityTemplate.add("setterMethods", setterTemplate.render());
@@ -160,14 +189,27 @@ public class FlugApp {
 		writeTemplate(outputDirectory, javaClassName + "Builder.java", entityTemplate);
 	}
 
-	private boolean isBuildable(String propertyPackageName) {
-		return propertyPackageName != null && includeSet.stream().anyMatch(p -> p.equals(propertyPackageName));
+	private String getConcreteCollectionClassName(JavaClass javaClass, String genericType) {
+		Class<?> clazz = null;
+		if (javaClass.isA(Map.class.getName())) {
+			clazz = HashMap.class;
+		} else if (javaClass.isA(List.class.getName())) {
+			clazz = ArrayList.class;
+		} else if (javaClass.isA(Set.class.getName())) {
+			clazz = HashSet.class;
+		} else {
+			clazz = ArrayList.class;
+		}
+		return clazz.getName() + "<" + genericType + ">";
 	}
 
 	private static void writeTemplate(File dir, String fileName, ST entityTemplate) throws IOException {
 		FileWriter fileWriter = new FileWriter(new File(dir, fileName));
 		fileWriter.write(entityTemplate.render());
 		fileWriter.close();
+	}
+
+	public static void main(String[] args) {
 	}
 
 }

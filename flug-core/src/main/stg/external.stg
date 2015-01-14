@@ -12,12 +12,23 @@ public <currentBuilderClass> <propertyName>(<valueType> <propertyName>) {
 
 builderSetter(class, currentBuilderClass, propertyName, parentBuilder) ::= <<
 public <class>Builder\< <currentBuilderClass> > <propertyName>() {
-	this.<propertyName> = new <class>Builder\< <currentBuilderClass> >(this);
-	return this.<propertyName>;
+	this.<propertyName>Builder = new <class>Builder\< <currentBuilderClass> >(this);
+	return this.<propertyName>Builder;
 }
 <\n>
 >>
 
+collectionSetter(class, currentBuilderClass, propertyName, parentBuilder, collectionClass, concreteCollectionClass) ::= <<
+public <currentBuilderClass> <propertyName>() {
+	if (this.<propertyName>Builder == null) {
+		this.<propertyName>Builder = new <concreteCollectionClass>();
+	} 
+	<currentBuilderClass> val = new <currentBuilderClass>(this);
+	this.<propertyName>Builder.add(val);
+	return val;
+}
+<\n>
+>>
 
 topLevelBuilderClass(package, qualifiedClass, class, fields, setterMethods, instanceInit) ::= <<
 package <package>;
@@ -72,6 +83,9 @@ public class <class>Builder\<P> {
 >>
 
 instanceInit(setter, value) ::= <<
-instance.<setter>(<value>);
-	
+instance.<setter>(<value>);	
+>>
+
+instanceInitList(setter, propName) ::= <<
+instance.<setter>(<propName> == null ? null : <propName>.stream().map(p -> p.build()).collect(java.util.stream.Collectors.toList()));
 >>

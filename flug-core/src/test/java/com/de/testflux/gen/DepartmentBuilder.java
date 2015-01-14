@@ -1,18 +1,18 @@
 package com.de.testflux.gen;
 
-import com.de.testflux.City;
+import com.de.testflux.Department;
 
-public class CityBuilder<P> {
+public class DepartmentBuilder<P> {
 
 	private String name;
 
 	P _parent;
 
-	public CityBuilder(P _parent) {
+	public DepartmentBuilder(P _parent) {
 		this._parent = _parent;
 	}
 
-	public CityBuilder<P> name(java.lang.String name) {
+	public DepartmentBuilder<P> name(java.lang.String name) {
 		this.name = name;
 		return this;
 	}
@@ -23,8 +23,8 @@ public class CityBuilder<P> {
 		return _parent;
 	}
 
-	public City build() {
-		City instance = new City();
+	public Department build() {
+		Department instance = new Department();
 		instance.setName(name);			
 		return instance;
 	}	

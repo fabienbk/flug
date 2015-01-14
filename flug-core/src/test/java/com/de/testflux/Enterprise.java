@@ -1,9 +1,11 @@
 package com.de.testflux;
 
+import java.util.List;
+
 public class Enterprise {
 
 	private String name;
-
+	private List<Department> departmentList;
 	private Address address;
 
 	public String getName() {
@@ -20,6 +22,14 @@ public class Enterprise {
 
 	public void setAddress(Address address) {
 		this.address = address;
+	}
+
+	public void setDepartmentList(List<Department> departmentList) {
+		this.departmentList = departmentList;
+	}
+
+	public List<Department> getDepartmentList() {
+		return departmentList;
 	}
 
 }

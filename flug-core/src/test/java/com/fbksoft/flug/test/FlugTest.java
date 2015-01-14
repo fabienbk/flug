@@ -1,20 +1,25 @@
 package com.fbksoft.flug.test;
 
+import java.io.File;
+
 import org.junit.Test;
 
-import com.de.testflux.Enterprise;
 import com.fbksoft.flug.FlugApp;
-
-import java.io.File;
+import com.thoughtworks.qdox.JavaDocBuilder;
 
 public class FlugTest {
 
 	@Test
-	public void test() throws Exception {
+	public void testJavaGen() throws Exception {
 
-		File outputDir = new File("src/test/java/com/de/testflux/gen");
-		System.out.println(outputDir.getAbsolutePath());
+		File parent = new File("d:/dev/helios/HeliosCore/src/test/java/");
 
-		new FlugApp(new Class[] { Enterprise.class },"com.de.testflux", "com.de.testflux.gen", outputDir).run();
+		File outputDir = new File(parent, "com/de/helios/test/tools/flux/xxx");
+
+		JavaDocBuilder builder = new JavaDocBuilder();
+		builder.addSource(new File("D:/dev/helios/HeliosExternal/target/generated-sources/xjc/com/de/helios/data/x12x13/AffaireType.java"));
+
+		new FlugApp(builder, "com.de.helios.data.x12x13", "com.de.helios.test.tools.flux.xxx", outputDir).run();
+
 	}
 }

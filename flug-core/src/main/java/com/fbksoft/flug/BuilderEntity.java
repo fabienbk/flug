@@ -1,41 +1,20 @@
 package com.fbksoft.flug;
 
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import com.fbksoft.flug.model.BeanClass;
-import com.thoughtworks.qdox.model.BeanProperty;
+import com.fbksoft.flug.model.BeanPropertyDescriptor;
 import com.thoughtworks.qdox.model.JavaClass;
+import com.thoughtworks.qdox.model.Type;
 
 public class BuilderEntity {
 
-	public BeanClass beanClass;
-	public String parentBuilder;
+	private BeanClass beanClass;
+	private boolean topLevel;
 
-	private JavaClass javaClass;
-
-	private Map<String, List<PropertyDescriptor>> propertiesByName;
-
-	public BuilderEntity(JavaClass javaClass, String parentBuilder) {
-		this.javaClass = javaClass;
-		this.beanClass = BeanClass.from(javaClass);
-		this.parentBuilder = parentBuilder;
-	}
-
-	public BuilderEntity(Class<?> clazz, String parentBuilder) {
-		try {
-			PropertyDescriptor[] propertyDescriptors = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
-			propertiesByName = Arrays.asList(propertyDescriptors).stream().collect(Collectors.groupingBy(PropertyDescriptor::getName));
-		} catch (IntrospectionException e) {
-		}
-
-		this.beanClass = BeanClass.from(clazz);
-		this.parentBuilder = parentBuilder;
+	public BuilderEntity(JavaClass javaClass, boolean topLevel) {
+		this.beanClass = new BeanClass(javaClass);
+		this.topLevel = topLevel;
 	}
 
 	public BeanClass getBeanClass() {
@@ -46,14 +25,19 @@ public class BuilderEntity {
 		return beanClass.getSimpleName() + "Builder";
 	}
 
-	public BuilderEntity getSubBuilder(String propertyName) {
-		if (javaClass != null) {
-			BeanProperty beanProperty = javaClass.getBeanProperty(propertyName);
-			JavaClass propJavaClass = beanProperty.getType().getJavaClass();
-			return new BuilderEntity(propJavaClass, getBuilderClassSimpleName());
+	public BuilderEntity getSubBuilder(String propertyName, Set<String> includeSet) {
+		BeanPropertyDescriptor beanProperty = beanClass.getBeanProperty(propertyName);
+		JavaClass javaClass = beanProperty.getJavaClass();
+
+		if (beanProperty.isBuildableCollection(includeSet)) {
+			Type genericType = beanProperty.getGenericType()[0];
+			return new BuilderEntity(genericType.getJavaClass(), false);
 		} else {
-			Class<?> propertyType = propertiesByName.get(propertyName).get(0).getPropertyType();
-			return new BuilderEntity(propertyType, getBuilderClassSimpleName());
+			return new BuilderEntity(javaClass, false);
 		}
+	}
+
+	public boolean isTopLevel() {
+		return topLevel;
 	}
 }

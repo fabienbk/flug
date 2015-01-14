@@ -4,10 +4,10 @@ import com.de.testflux.Address;
 
 public class AddressBuilder<P> {
 
-	private CityBuilder<AddressBuilder<P>> cityBuilder;
-	private String line1;
-	private String line2;
 	private int number;
+	private CityBuilder<AddressBuilder<P>> cityBuilder;
+	private String line2;
+	private String line1;
 
 	P _parent;
 
@@ -15,14 +15,14 @@ public class AddressBuilder<P> {
 		this._parent = _parent;
 	}
 
-	public CityBuilder< AddressBuilder<P> > cityBuilder() {
-		this.cityBuilder = new CityBuilder< AddressBuilder<P> >(this);
-		return this.cityBuilder;
+	public AddressBuilder<P> number(int number) {
+		this.number = number;
+		return this;
 	}
 
-	public AddressBuilder<P> line1(java.lang.String line1) {
-		this.line1 = line1;
-		return this;
+	public CityBuilder< AddressBuilder<P> > city() {
+		this.cityBuilder = new CityBuilder< AddressBuilder<P> >(this);
+		return this.cityBuilder;
 	}
 
 	public AddressBuilder<P> line2(java.lang.String line2) {
@@ -30,8 +30,8 @@ public class AddressBuilder<P> {
 		return this;
 	}
 
-	public AddressBuilder<P> number(int number) {
-		this.number = number;
+	public AddressBuilder<P> line1(java.lang.String line1) {
+		this.line1 = line1;
 		return this;
 	}
 
@@ -43,11 +43,7 @@ public class AddressBuilder<P> {
 
 	public Address build() {
 		Address instance = new Address();
-		instance.setCity(cityBuilder == null ? null : cityBuilder.build());
-			instance.setLine1(line1);
-			instance.setLine2(line2);
-			instance.setNumber(number);
-					
+		instance.setNumber(number);	instance.setCity(cityBuilder == null ? null : cityBuilder.build());	instance.setLine2(line2);	instance.setLine1(line1);			
 		return instance;
 	}	
 }
