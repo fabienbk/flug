@@ -9,16 +9,17 @@ import com.thoughtworks.qdox.model.JavaMethod;
 import com.thoughtworks.qdox.model.JavaPackage;
 import com.thoughtworks.qdox.model.Type;
 
+/**
+ * @author fkoch
+ *
+ */
 public class BeanPropertyDescriptor {
 
 	private BeanProperty property;
+	private boolean readOnly;
 
-	public BeanPropertyDescriptor(BeanProperty beanProperty) {
+	public BeanPropertyDescriptor(JavaClass clazz, BeanProperty beanProperty) {
 		this.property = beanProperty;
-
-		if (getGenericType() != null && getGenericType().length == 1) {
-			System.out.println(getGenericType()[0]);
-		}
 	}
 
 	public JavaClass getJavaClass() {
@@ -48,7 +49,17 @@ public class BeanPropertyDescriptor {
 	}
 
 	public boolean isBuildable(Set<String> includeSet) {
-		return getPackageName() != null && includeSet.stream().anyMatch(p -> p.equals(getPackageName()));
+		String packageName = getPackageName();
+		if (packageName != null) {
+
+			if (property.getType().getJavaClass().isEnum()) {
+				return false;
+			}
+
+			return includeSet.stream().anyMatch(p -> p.equals(packageName));
+		} else {
+			return false;
+		}
 	}
 
 	public boolean isCollection() {
@@ -64,7 +75,9 @@ public class BeanPropertyDescriptor {
 			return false;
 		}
 
-		String genericTypePackage = genericTypes[0].getJavaClass().getPackageName();
+		JavaClass javaClass = genericTypes[0].getJavaClass();
+		String genericTypePackage = javaClass.getPackageName();
+
 		if (includeSet.stream().anyMatch(p -> p.equals(genericTypePackage))) {
 			return true;
 		}
@@ -76,4 +89,16 @@ public class BeanPropertyDescriptor {
 		return property.getType().getActualTypeArguments();
 	}
 
+	@Override
+	public String toString() {
+		return property.getName();
+	}
+
+	public void setReadOnly(boolean readOnly) {
+		this.readOnly = readOnly;
+	}
+
+	public String getGetterName() {
+		return property.getAccessor().getName();
+	}
 }

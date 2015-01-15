@@ -20,6 +20,7 @@ import com.fbksoft.flug.model.BeanClass;
 import com.fbksoft.flug.model.BeanPropertyDescriptor;
 import com.thoughtworks.qdox.JavaDocBuilder;
 import com.thoughtworks.qdox.model.JavaClass;
+import com.thoughtworks.qdox.model.JavaPackage;
 
 public class FlugApp {
 
@@ -30,18 +31,27 @@ public class FlugApp {
 
 	private String outputPackageName;
 
-	public FlugApp(JavaDocBuilder builder, String rootPackage, String outputPackageName, File outputDirectory) {
-		init(rootPackage, outputPackageName, outputDirectory);
+	public FlugApp(String topLevelClassName, JavaDocBuilder builder, String outputPackageName, File outputDirectory) {
+		Set<String> rootPackages = new HashSet<>();
+
+		for (JavaPackage javaPackage : builder.getPackages()) {
+			rootPackages.add(javaPackage.getName());
+		}
+
+		init(rootPackages, outputPackageName, outputDirectory);
 
 		for (JavaClass javaClass : builder.getClasses()) {
-			workList.push(new BuilderEntity(javaClass, true));
+			if (javaClass.getFullyQualifiedName().equals(topLevelClassName)) {
+				workList.push(new BuilderEntity(javaClass, true));
+				break;
+			}
 		}
 	}
 
-	private void init(String rootPackage, String outputPackageName, File outputDirectory) {
+	private void init(Set<String> rootPackages, String outputPackageName, File outputDirectory) {
 		this.outputPackageName = outputPackageName;
 		this.outputDirectory = outputDirectory;
-		this.includeSet.add(rootPackage);
+		this.includeSet = rootPackages;
 
 		System.out.println("output directory = " + outputDirectory);
 	}
@@ -62,7 +72,8 @@ public class FlugApp {
 
 	private void writeNewBuilder(BuilderEntity builder, BeanClass beanClass) throws IntrospectionException, ClassNotFoundException, IOException {
 
-		System.out.println("*** Writer builder for " + beanClass.getQualifiedName());
+		System.out.println("*** Writer +" + builder.isTopLevel() + " builder for " + beanClass.getQualifiedName());
+
 		STGroup groupFile = new STGroupFile("src/main/stg/external.stg");
 
 		ST entityTemplate = builder.isTopLevel() ? groupFile.getInstanceOf("topLevelBuilderClass") : groupFile.getInstanceOf("builderClass");
@@ -79,15 +90,13 @@ public class FlugApp {
 				continue;
 			}
 
-			if (writeMethodName == null || propertyClassSimpleName == null) {
-				continue;
-			}
-
 			String currentBuilderClass = builder.isTopLevel() ? javaClassName + "Builder" : javaClassName + "Builder<P>";
 
 			String propertyBuilderName = propertyName + "Builder";
 
 			if (beanProperty.isBuildable(includeSet)) {
+
+				System.out.println("   " + beanProperty.toString() + " is buildable");
 
 				if (!visitedClasses.contains(beanProperty.getQualifiedName())) {
 					workList.push(builder.getSubBuilder(beanProperty.getName(), includeSet));
@@ -118,6 +127,8 @@ public class FlugApp {
 
 			} else if (beanProperty.isBuildableCollection(includeSet)) {
 
+				System.out.println("   " + beanProperty.toString() + " is collection - buildable");
+
 				if (!visitedClasses.contains(beanProperty.getQualifiedName())) {
 					workList.push(builder.getSubBuilder(beanProperty.getName(), includeSet));
 				}
@@ -146,7 +157,7 @@ public class FlugApp {
 
 				// instance init
 				ST instanceInitTemplate = groupFile.getInstanceOf("instanceInitList");
-				instanceInitTemplate.add("setter", beanProperty.getSetterName());
+				instanceInitTemplate.add("setter", beanProperty.getGetterName());
 				instanceInitTemplate.add("propName", propertyBuilderName);
 				entityTemplate.add("instanceInit", instanceInitTemplate.render());
 
@@ -155,9 +166,11 @@ public class FlugApp {
 			} else {
 				// Non buildable property
 
+				System.out.println("   " + beanProperty.toString() + " is NOT buildable");
+
 				// Normal Field
 				ST fieldTemplate = groupFile.getInstanceOf("field");
-				fieldTemplate.add("type", beanProperty.getClassSimpleName());
+				fieldTemplate.add("type", beanProperty.getQualifiedName());
 				fieldTemplate.add("name", propertyName);
 				entityTemplate.add("fields", fieldTemplate.render());
 
@@ -186,7 +199,7 @@ public class FlugApp {
 
 		// entityTemplate.add("setterMethods", "");
 
-		writeTemplate(outputDirectory, javaClassName + "Builder.java", entityTemplate);
+		writeTemplate(javaClassName + "Builder.java", entityTemplate);
 	}
 
 	private String getConcreteCollectionClassName(JavaClass javaClass, String genericType) {
@@ -203,8 +216,8 @@ public class FlugApp {
 		return clazz.getName() + "<" + genericType + ">";
 	}
 
-	private static void writeTemplate(File dir, String fileName, ST entityTemplate) throws IOException {
-		FileWriter fileWriter = new FileWriter(new File(dir, fileName));
+	private void writeTemplate(String fileName, ST entityTemplate) throws IOException {
+		FileWriter fileWriter = new FileWriter(new File(outputDirectory, fileName));
 		fileWriter.write(entityTemplate.render());
 		fileWriter.close();
 	}

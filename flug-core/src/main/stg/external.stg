@@ -33,8 +33,6 @@ public <currentBuilderClass> <propertyName>() {
 topLevelBuilderClass(package, qualifiedClass, class, fields, setterMethods, instanceInit) ::= <<
 package <package>;
 
-import <qualifiedClass>;
-
 public class <class>Builder {
 	 
 	<fields>
@@ -44,8 +42,8 @@ public class <class>Builder {
 	
 	<setterMethods>
 			
-	public <class> build() {
-		<class> instance = new <class>();
+	public <qualifiedClass> build() {
+		<qualifiedClass> instance = new <qualifiedClass>();
 		<instanceInit>		
 		return instance;
 	}	
@@ -55,8 +53,6 @@ public class <class>Builder {
 
 builderClass(package, qualifiedClass, class, subBuildersFields, fields, setterMethods, instanceInit, parentBuilder) ::= <<
 package <package>;
-
-import <qualifiedClass>;
 
 public class <class>Builder\<P> {
 	 
@@ -74,8 +70,8 @@ public class <class>Builder\<P> {
 		return _parent;
 	}
 			
-	public <class> build() {
-		<class> instance = new <class>();
+	public <qualifiedClass> build() {
+		<qualifiedClass> instance = new <qualifiedClass>();
 		<instanceInit>		
 		return instance;
 	}	
@@ -84,8 +80,16 @@ public class <class>Builder\<P> {
 
 instanceInit(setter, value) ::= <<
 instance.<setter>(<value>);	
+
 >>
 
 instanceInitList(setter, propName) ::= <<
-instance.<setter>(<propName> == null ? null : <propName>.stream().map(p -> p.build()).collect(java.util.stream.Collectors.toList()));
+if (<propName> != null) { <propName>.stream().forEach(p -> instance.<setter>().add(p.build())); }
+
+>>
+
+file(clazz) ::= <<
+package <package>;
+
+<clazz>
 >>
