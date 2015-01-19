@@ -21,8 +21,6 @@ public class BeanClass {
 			beanProperties.put(beanProperty.getName(), new BeanPropertyDescriptor(clazz, beanProperty));
 		}
 
-		System.out.println(beanProperties);
-
 		List<JavaMethod> methods = Arrays.asList(clazz.getMethods());
 
 		for (JavaMethod javaMethod : methods) {

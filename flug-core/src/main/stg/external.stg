@@ -29,8 +29,8 @@ public <currentBuilderClass> <propertyName>() {
 }
 <\n>
 >>
+topLevelBuilderClass(package, qualifiedClass, class, fields, setterMethods, instanceInit, innerClass) ::= <<
 
-topLevelBuilderClass(package, qualifiedClass, class, fields, setterMethods, instanceInit) ::= <<
 package <package>;
 
 public class <class>Builder {
@@ -47,14 +47,15 @@ public class <class>Builder {
 		<instanceInit>		
 		return instance;
 	}	
+	
+	<innerClass>
 }
 >>
 
 
 builderClass(package, qualifiedClass, class, subBuildersFields, fields, setterMethods, instanceInit, parentBuilder) ::= <<
-package <package>;
 
-public class <class>Builder\<P> {
+public static class <class>Builder\<P> {
 	 
 	<subBuildersFields>
 	<fields>
@@ -88,8 +89,3 @@ if (<propName> != null) { <propName>.stream().forEach(p -> instance.<setter>().a
 
 >>
 
-file(clazz) ::= <<
-package <package>;
-
-<clazz>
->>
