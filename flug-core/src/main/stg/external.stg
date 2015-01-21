@@ -10,9 +10,18 @@ public <currentBuilderClass> <propertyName>(<valueType> <propertyName>) {
 <\n>
 >>
 
-builderSetter(class, currentBuilderClass, propertyName, parentBuilder) ::= <<
+builderSetter(class, currentBuilderClass, propertyName, parentBuilder, parameterList, subBuilderInit) ::= <<
 public <class>Builder\< <currentBuilderClass> > <propertyName>() {
 	this.<propertyName>Builder = new <class>Builder\< <currentBuilderClass> >(this);
+	return this.<propertyName>Builder;
+}
+<\n>
+>>
+
+inlineBuilderSetter(class, currentBuilderClass, propertyName, parentBuilder, parameterList, subBuilderInit) ::= <<
+public <class>Builder\< <currentBuilderClass> > <propertyName>(<parameterList>) {
+	this.<propertyName>Builder = new <class>Builder\< <currentBuilderClass> >(this);
+	<subBuilderInit>
 	return this.<propertyName>Builder;
 }
 <\n>
@@ -50,6 +59,7 @@ public class <class>Builder {
 	
 	<innerClass>
 }
+<\n>
 >>
 
 
@@ -77,15 +87,14 @@ public static class <class>Builder\<P> {
 		return instance;
 	}	
 }
+<\n>
 >>
 
 instanceInit(setter, value) ::= <<
-instance.<setter>(<value>);	
-
+instance.<setter>(<value>);<\n>
 >>
 
 instanceInitList(setter, propName) ::= <<
-if (<propName> != null) { <propName>.stream().forEach(p -> instance.<setter>().add(p.build())); }
-
+if (<propName> != null) { <propName>.stream().forEach(p -> instance.<setter>().add(p.build())); }<\n>
 >>
 

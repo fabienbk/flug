@@ -17,6 +17,7 @@ import org.stringtemplate.v4.STGroupFile;
 import com.fbksoft.flug.model.BeanClass;
 import com.fbksoft.flug.model.BeanPropertyDescriptor;
 import com.thoughtworks.qdox.JavaDocBuilder;
+import com.thoughtworks.qdox.model.BeanProperty;
 import com.thoughtworks.qdox.model.JavaClass;
 import com.thoughtworks.qdox.model.JavaPackage;
 
@@ -33,8 +34,10 @@ public class FlugApp {
 	private FileWriter fileWriter;
 	private String rootFileName;
 	private STGroup templateStore;
+	private JavaDocBuilder javaDocBuilder;
 
 	public FlugApp(String topLevelClassName, JavaDocBuilder builder, String outputPackageName, File outputDirectory) {
+		this.javaDocBuilder = builder;
 		Set<String> rootPackages = new HashSet<>();
 
 		for (JavaPackage javaPackage : builder.getPackages()) {
@@ -118,14 +121,48 @@ public class FlugApp {
 				setterTemplate.add("class", beanProperty.getClassSimpleName());
 				setterTemplate.add("propertyName", propertyName);
 				setterTemplate.add("parentBuilder", javaClassName);
+				entityTemplate.add("setterMethods", setterTemplate.render());
+
+				JavaClass javaClass = beanProperty.getJavaClass();
+				BeanProperty[] subBuilderProperties = javaClass.getBeanProperties();
+				if (subBuilderProperties.length > 0) {
+					ST inlineSetterTemplate = templateStore.getInstanceOf("inlineBuilderSetter");
+					inlineSetterTemplate.add("currentBuilderClass", currentBuilderClass);
+					inlineSetterTemplate.add("class", beanProperty.getClassSimpleName());
+					inlineSetterTemplate.add("propertyName", propertyName);
+					inlineSetterTemplate.add("parentBuilder", javaClassName);
+
+					// parameterList, subBuilderInit
+					for (int i = 0; i < subBuilderProperties.length; i++) {
+						BeanProperty subBuilderProperty = subBuilderProperties[i];
+
+						BeanPropertyDescriptor beanPropertyDescriptor = new BeanPropertyDescriptor(javaClass, subBuilderProperty);
+
+						if (!beanPropertyDescriptor.isBuildable(includeSet) && !beanPropertyDescriptor.isBuildableCollection(includeSet)) {
+
+							String name = subBuilderProperty.getName();
+							String type = subBuilderProperty.getType().getFullyQualifiedName();
+							String comma = i == subBuilderProperties.length - 1 ? "" : ",";
+							String parameter = String.format("%s %s%s", type, name, comma);
+							inlineSetterTemplate.add("parameterList", parameter);
+
+							String subBuilderInit = String.format("this.%sBuilder.%s(%s);\n", propertyName, subBuilderProperty.getName(),
+											subBuilderProperty.getName());
+							inlineSetterTemplate.add("subBuilderInit", subBuilderInit);
+						}
+
+					}
+
+					entityTemplate.add("setterMethods", inlineSetterTemplate.render());
+				}
+
+				//
 
 				// instance init
 				ST instanceInitTemplate = templateStore.getInstanceOf("instanceInit");
 				instanceInitTemplate.add("setter", beanProperty.getSetterName());
 				instanceInitTemplate.add("value", propertyBuilderName + " == null ? null : " + propertyBuilderName + ".build()");
 				entityTemplate.add("instanceInit", instanceInitTemplate.render());
-
-				entityTemplate.add("setterMethods", setterTemplate.render());
 
 			} else if (beanProperty.isBuildableCollection(includeSet)) {
 

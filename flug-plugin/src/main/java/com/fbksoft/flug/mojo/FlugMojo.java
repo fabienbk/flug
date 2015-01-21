@@ -9,8 +9,8 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 
+import com.fbksoft.flug.FlugApp;
 import com.thoughtworks.qdox.JavaDocBuilder;
-import com.thoughtworks.qdox.model.JavaClass;
 
 /**
  * @goal generate-sources
@@ -42,28 +42,34 @@ public class FlugMojo extends AbstractMojo {
 	 */
 	String packageName;
 
+	/**
+	 * topLevelClassName
+	 *
+	 * @parameter
+	 * @required
+	 */
+	String topLevelClassName;
+
 	@Override
 	public void execute() throws MojoExecutionException, MojoFailureException {
 
 		JavaDocBuilder builder = new JavaDocBuilder();
 
-		System.out.println("sources:");
 		for (String fileName : sources) {
-			System.out.println(sources);
-
-			List compileSourceRoots = project.getCompileSourceRoots();
-			for (Object object : compileSourceRoots) {
-				System.out.println("***" + object.toString());
-			}
-
+			List<?> compileSourceRoots = project.getCompileSourceRoots();
 			try {
 				builder.addSource(new File(new File((String) compileSourceRoots.get(0)), fileName));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
-			JavaClass[] classes = builder.getClasses();
-			// new FlugApp(classes, packageName);
+			String baseOutputDirectoryPath = project.getBuild().getOutputDirectory();
+			File baseOutputDirectory = new File(baseOutputDirectoryPath);
+			File outputDirectory = new File(baseOutputDirectory, "generated-sources/flug");
+
+			new FlugApp(topLevelClassName, builder, packageName, outputDirectory);
+
+			project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
 		}
 
 	}
