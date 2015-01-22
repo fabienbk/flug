@@ -133,16 +133,24 @@ public class FlugApp {
 					inlineSetterTemplate.add("parentBuilder", javaClassName);
 
 					// parameterList, subBuilderInit
+
+					List<BeanProperty> selected = new ArrayList<>();
+
 					for (int i = 0; i < subBuilderProperties.length; i++) {
 						BeanProperty subBuilderProperty = subBuilderProperties[i];
-
 						BeanPropertyDescriptor beanPropertyDescriptor = new BeanPropertyDescriptor(javaClass, subBuilderProperty);
-
 						if (!beanPropertyDescriptor.isBuildable(includeSet) && !beanPropertyDescriptor.isBuildableCollection(includeSet)) {
+							selected.add(subBuilderProperty);
+						}
+					}
+
+					if (selected.size() > 0) {
+						for (int j = 0; j < selected.size(); j++) {
+							BeanProperty subBuilderProperty = selected.get(j);
 
 							String name = subBuilderProperty.getName();
 							String type = subBuilderProperty.getType().getFullyQualifiedName();
-							String comma = i == subBuilderProperties.length - 1 ? "" : ",";
+							String comma = j == (selected.size() - 1) ? "" : ",";
 							String parameter = String.format("%s %s%s", type, name, comma);
 							inlineSetterTemplate.add("parameterList", parameter);
 
@@ -150,10 +158,9 @@ public class FlugApp {
 											subBuilderProperty.getName());
 							inlineSetterTemplate.add("subBuilderInit", subBuilderInit);
 						}
-
+						entityTemplate.add("setterMethods", inlineSetterTemplate.render());
 					}
 
-					entityTemplate.add("setterMethods", inlineSetterTemplate.render());
 				}
 
 				//
