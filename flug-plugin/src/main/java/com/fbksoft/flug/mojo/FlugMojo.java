@@ -64,10 +64,24 @@ public class FlugMojo extends AbstractMojo {
 			}
 
 			String baseOutputDirectoryPath = project.getBuild().getOutputDirectory();
+
+			System.out.println(baseOutputDirectoryPath);
+
 			File baseOutputDirectory = new File(baseOutputDirectoryPath);
 			File outputDirectory = new File(baseOutputDirectory, "generated-sources/flug");
 
-			new FlugApp(topLevelClassName, builder, packageName, outputDirectory);
+			if (!outputDirectory.exists()) {
+				outputDirectory.mkdir();
+				System.out.println("Created " + outputDirectory.getAbsolutePath());
+			} else {
+				System.out.println("Output " + outputDirectory.getAbsolutePath() + " exists");
+			}
+
+			try {
+				new FlugApp(topLevelClassName, builder, packageName, outputDirectory).run();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 			project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
 		}

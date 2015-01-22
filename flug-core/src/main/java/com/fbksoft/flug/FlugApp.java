@@ -49,9 +49,11 @@ public class FlugApp {
 		this.includeSet = rootPackages;
 
 		System.out.println("output directory = " + outputDirectory);
-		templateStore = new STGroupFile("src/main/stg/external.stg");
+
+		templateStore = new STGroupFile("external.stg");
 
 		for (JavaClass javaClass : builder.getClasses()) {
+			System.out.println("javaClass " + javaClass.getFullyQualifiedName() + " vs. topLevelclass " + topLevelClassName);
 			if (javaClass.getFullyQualifiedName().equals(topLevelClassName)) {
 				this.rootFileName = javaClass.getName() + "Builder.java";
 				workList.push(new BuilderEntity(javaClass, true));
@@ -62,7 +64,8 @@ public class FlugApp {
 
 	public void run() throws Exception {
 
-		this.fileWriter = new FileWriter(new File(outputDirectory, rootFileName));
+		File file = new File(outputDirectory, rootFileName);
+		this.fileWriter = new FileWriter(file);
 
 		ST fileTemplate = templateStore.getInstanceOf("topLevelBuilderClass");
 		fileTemplate.add("package", outputPackageName);
@@ -71,6 +74,7 @@ public class FlugApp {
 			writeNewBuilder(workList.pop(), fileTemplate);
 		}
 
+		System.out.println("Writing file " + file.getAbsolutePath());
 		fileWriter.write(fileTemplate.render());
 		fileWriter.close();
 	}
@@ -261,6 +265,26 @@ public class FlugApp {
 			clazz = ArrayList.class;
 		}
 		return clazz.getName() + "<" + genericType + ">";
+	}
+
+	public static void main(String[] args) {
+		// File parent = new File("d:/dev/helios/HeliosCore/src/test/java/");
+		//
+		// String generatedSourcesPackage = "com.de.helios.test.tools.flux.xxx";
+		// File outputDir = new File(parent, "com/de/helios/test/tools/flux/xxx");
+		//
+		// JavaDocBuilder builder = new JavaDocBuilder();
+		//
+		// Files.walk(new File("D:/dev/helios/HeliosExternal/target/generated-sources/xjc/").toPath()).forEach(f -> {
+		// try {
+		// builder.addSource(f.toFile());
+		// } catch (Exception e) {
+		// }
+		// });
+		//
+		// String topLevelClass = "com.de.helios.data.x12x13.AffairesType";
+		//
+		// new FlugApp(topLevelClass, builder, generatedSourcesPackage, outputDir).run();
 	}
 
 }
