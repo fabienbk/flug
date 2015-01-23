@@ -17,14 +17,17 @@ public class BeanClass {
 
 	public BeanClass(JavaClass clazz) {
 		this.clazz = clazz;
-		for (BeanProperty beanProperty : clazz.getBeanProperties()) {
-			beanProperties.put(beanProperty.getName(), new BeanPropertyDescriptor(clazz, beanProperty));
+
+		for (BeanProperty beanProperty : clazz.getBeanProperties(true)) {
+			if (!beanProperty.getName().equals("class")) {
+				beanProperties.put(beanProperty.getName(), new BeanPropertyDescriptor(clazz, beanProperty));
+			}
 		}
 
-		List<JavaMethod> methods = Arrays.asList(clazz.getMethods());
+		List<JavaMethod> methods = Arrays.asList(clazz.getMethods(true));
 
 		for (JavaMethod javaMethod : methods) {
-			if (javaMethod.isPropertyAccessor()) {
+			if (javaMethod.isPropertyAccessor() && !javaMethod.getName().equals("getClass")) {
 				String propertyName = javaMethod.getPropertyName();
 
 				// search for matching mutator

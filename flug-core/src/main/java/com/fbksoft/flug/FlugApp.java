@@ -2,6 +2,7 @@ package com.fbksoft.flug;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -267,24 +268,24 @@ public class FlugApp {
 		return clazz.getName() + "<" + genericType + ">";
 	}
 
-	public static void main(String[] args) {
-		// File parent = new File("d:/dev/helios/HeliosCore/src/test/java/");
-		//
-		// String generatedSourcesPackage = "com.de.helios.test.tools.flux.xxx";
-		// File outputDir = new File(parent, "com/de/helios/test/tools/flux/xxx");
-		//
-		// JavaDocBuilder builder = new JavaDocBuilder();
-		//
-		// Files.walk(new File("D:/dev/helios/HeliosExternal/target/generated-sources/xjc/").toPath()).forEach(f -> {
-		// try {
-		// builder.addSource(f.toFile());
-		// } catch (Exception e) {
-		// }
-		// });
-		//
-		// String topLevelClass = "com.de.helios.data.x12x13.AffairesType";
-		//
-		// new FlugApp(topLevelClass, builder, generatedSourcesPackage, outputDir).run();
+	public static void main(String[] args) throws Exception {
+		File parent = new File("d:/dev/helios/HeliosCore/src/main/java/");
+
+		String generatedSourcesPackage = "com.de.helios.core.helpers";
+		File outputDir = new File(parent, "com/de/helios/core/helpers");
+
+		JavaDocBuilder builder = new JavaDocBuilder();
+
+		Files.walk(new File("D:/dev/helios/HeliosExternal/target/generated-sources/xjc/").toPath()).forEach(f -> {
+			try {
+				builder.addSource(f.toFile());
+			} catch (Exception e) {
+			}
+		});
+
+		String topLevelClass = "com.de.helios.data.x12x13.AffairesType";
+
+		new FlugApp(topLevelClass, builder, generatedSourcesPackage, outputDir).run();
 	}
 
 }
